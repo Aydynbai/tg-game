@@ -10,6 +10,7 @@ html,body{height:100%;background:#1b1420;color:#fff7ea;font-family:Manrope,syste
 body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px)}
 header{display:flex;align-items:center;justify-content:space-between;padding:18px 4px 14px}
 h1{font-size:22px;font-weight:800;color:#ffcf6e}
+#mute{background:rgba(255,255,255,.08);border:0;border-radius:20px;font-size:16px;padding:5px 10px;margin-right:6px;color:#fff}
 #st{font-size:14px;font-weight:700;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,247,234,.7)}
 #st.ok{background:rgba(120,220,140,.16);color:#8fe3a4}
 #pad{flex:1;border-radius:24px;background:radial-gradient(circle at 50% 40%,#3a2740,#241829);position:relative;
@@ -20,7 +21,7 @@ h1{font-size:22px;font-weight:800;color:#ffcf6e}
 #go:active,#go.on{transform:scale(.97);background:#ffbe3b}
 #msg{position:fixed;left:0;right:0;top:40%;text-align:center;font-size:20px;font-weight:800;padding:0 30px;display:none}
 </style></head><body>
-<header><h1>Бүркітші</h1><span id="st">Қосылуда…</span></header>
+<header><h1>Бүркітші</h1><span><button id="mute">🔊</button> <span id="st">Қосылуда…</span></span></header>
 <div id="pad"><p>Саусақпен жүргіз — нысана қозғалады<br>Бір рет түрт — шүйілу</p><div id="dot"></div></div>
 <button id="go">ШҮЙІЛ</button>
 <div id="msg"></div>
@@ -37,6 +38,7 @@ function connect(){
     conn=peer.connect(id,{reliable:true});
     conn.on('open',function(){setSt('ТВ-ға қосылды',true);buzz(30)});
     conn.on('data',function(d){if(d&&d.t=='v')buzz(d.p);
+      if(d&&d.t=='snd')document.getElementById('mute').textContent=d.on?'🔊':'🔇';
       if(d&&d.t=='s'&&d.s=='over')setSt('Ұпай: '+d.score,true);
       if(d&&d.t=='s'&&d.s=='play')setSt('Ойын жүріп жатыр',true)});
     conn.on('close',function(){setSt('Ажырады, қайта қосылуда…');setTimeout(connect,1500)});
@@ -59,6 +61,7 @@ pad.addEventListener('touchmove',function(e){var t=e.touches[0],r=pad.getBoundin
   if(!raf)raf=requestAnimationFrame(flush);e.preventDefault()},{passive:false});
 pad.addEventListener('touchend',function(e){dot.style.opacity=0;
   if(moved<12&&Date.now()-t0<300){send({t:'a'});buzz(15)}e.preventDefault()},{passive:false});
+document.getElementById('mute').addEventListener('click',function(){send({t:'mute'})});
 var go=document.getElementById('go');
 go.addEventListener('touchstart',function(e){go.className='on';send({t:'a'});buzz(15);e.preventDefault()},{passive:false});
 go.addEventListener('touchend',function(){go.className=''});

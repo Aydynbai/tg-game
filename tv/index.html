@@ -43,6 +43,7 @@ canvas{display:block;position:fixed;left:0;top:0}
   <p>Бүркітті даладан аң аулауға жібер. Курсорды аңға апарып, OK бас, сонда бүркіт шүйіледі.</p>
   <div class="legend"><span><b>Қоян</b> 1</span><span><b>Түлкі</b> 3</span><span><b>Алтын түлкі</b> 10</span><span class="bad"><b>Қасқыр</b> −5 сек</span></div>
   <div class="btn">OK — бастау</div>
+  <p style="font-size:2.4vh;margin-top:3vh;opacity:.7"><span id="snd">🔊 Дыбыс қосулы</span> · өшіру: пульттегі қызыл түйме</p>
 </div>
 <div class="ui hide" id="over">
   <p>Аң аулау аяқталды</p>
@@ -244,6 +245,7 @@ addEventListener('mousedown',function(e){mx=e.clientX;my=e.clientY;act();e.preve
 addEventListener('keydown',function(e){if(e.keyCode==13){act();e.preventDefault()}},true);
 </script><div id="qr"><div id="qrimg"></div><div class="qt">Телефонмен ойна</div><div class="qs" id="qrs">Камерамен сканерле</div></div>
 <div id="padok">📱 Телефон қосулы</div>
+<script src="sound.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
@@ -254,6 +256,7 @@ function onPad(d){
   if(!d)return;
   if(d.t=='m'){mx=Math.max(0,Math.min(W,mx+d.x*W));my=Math.max(0,Math.min(H,my+d.y*H))}
   else if(d.t=='a'){act()}
+  else if(d.t=='mute'){muteToggle()}
 }
 function initPad(){
   if(!window.Peer){padStatus('Байланыс жоқ');return}
@@ -273,12 +276,20 @@ function initPad(){
   peer.on('disconnected',function(){try{peer.reconnect()}catch(e){}});
   peer.on('error',function(e){padStatus('Қайта қосылуда…');setTimeout(function(){try{peer.reconnect()}catch(_){}},3000)});
 }
+var S=window.Sound||{wake:function(){},play:function(){},stop:function(){},dive:function(){},hit:function(){},miss:function(){},wolf:function(){},toggle:function(){return true},isOn:function(){return true}};
 var _strike=strike;strike=function(tx,ty){var s0=score,t0=timeLeft;_strike(tx,ty);
-  if(timeLeft<t0-1)padSend({t:'v',p:[80,60,80]});else if(score>s0)padSend({t:'v',p:[40]})};
-var _begin=begin;begin=function(){_begin();document.getElementById('qr').className='hide';
+  if(timeLeft<t0-1){padSend({t:'v',p:[80,60,80]});S.wolf()}
+  else if(score>s0){padSend({t:'v',p:[40]});S.hit(score-s0>=10)}
+  else S.miss()};
+var _act=act;act=function(){S.wake();var had=dive;_act();if(dive&&!had)S.dive()};
+function muteToggle(){var on=S.toggle();document.getElementById('snd').textContent=on?'🔊 Дыбыс қосулы':'🔇 Дыбыс өшірулі';padSend({t:'snd',on:on})}
+addEventListener('keydown',function(e){S.wake();if(e.keyCode==403||e.keyCode==77){muteToggle();e.preventDefault()}},true);
+addEventListener('mousedown',function(){S.wake()},true);
+var _begin=begin;begin=function(){_begin();S.play();document.getElementById('qr').className='hide';
   document.getElementById('padok').style.display=padConn?'block':'none';padSend({t:'s',s:'play'})};
-var _end=end;end=function(){_end();document.getElementById('qr').className='';document.getElementById('padok').style.display='none';
+var _end=end;end=function(){_end();S.stop();document.getElementById('qr').className='';document.getElementById('padok').style.display='none';
   padSend({t:'s',s:'over',score:score})};
 initPad();
+document.getElementById('snd').textContent=S.isOn()?'🔊 Дыбыс қосулы':'🔇 Дыбыс өшірулі';
 </script>
 </body></html>
