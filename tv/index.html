@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="kk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Бүркітші</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#1b1420;cursor:none;
+  font-family:Manrope,"LG Smart UI",Arial,sans-serif;color:#fff7ea;-webkit-font-smoothing:antialiased}
+canvas{display:block;position:fixed;left:0;top:0}
+.ui{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at center,rgba(20,12,24,.55),rgba(20,12,24,.85));transition:opacity .3s}
+.ui.hide{opacity:0;pointer-events:none}
+.ui h1{font-size:13vh;font-weight:800;letter-spacing:-.02em;line-height:1;color:#ffcf6e;text-shadow:0 .8vh 4vh rgba(0,0,0,.5)}
+.ui p{font-size:3.4vh;font-weight:600;margin-top:2.4vh;color:rgba(255,247,234,.85);max-width:70vw;line-height:1.45}
+.ui .big{font-size:9vh;font-weight:800;color:#fff;margin-top:1vh}
+.ui .btn{margin-top:5vh;font-size:4vh;font-weight:800;background:#ffcf6e;color:#24160c;padding:2vh 5vw;border-radius:10vh}
+.legend{display:flex;gap:4vw;margin-top:4vh;font-size:3vh;font-weight:700}
+.legend span b{color:#ffcf6e}
+.legend .bad b{color:#ff7a6b}
+#hud{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;padding:3vh 4vw;
+  font-size:5.2vh;font-weight:800;text-shadow:0 .4vh 1.6vh rgba(0,0,0,.55);pointer-events:none}
+#hud small{display:block;font-size:2.2vh;font-weight:700;opacity:.7;letter-spacing:.08em;text-transform:uppercase}
+#combo{color:#ffcf6e}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud" style="display:none"><div><small>Ұпай</small><span id="sc">0</span></div>
+<div style="text-align:center"><small>Қатарынан</small><span id="combo">×1</span></div>
+<div style="text-align:right"><small>Уақыт</small><span id="tm">60</span></div></div>
+
+<div class="ui" id="start">
+  <h1>Бүркітші</h1>
+  <p>Бүркітті даладан аң аулауға жібер. Курсорды аңға апарып, OK бас, сонда бүркіт шүйіледі.</p>
+  <div class="legend"><span><b>Қоян</b> 1</span><span><b>Түлкі</b> 3</span><span><b>Алтын түлкі</b> 10</span><span class="bad"><b>Қасқыр</b> −5 сек</span></div>
+  <div class="btn">OK — бастау</div>
+</div>
+<div class="ui hide" id="over">
+  <p>Аң аулау аяқталды</p>
+  <div class="big" id="final">0</div>
+  <p id="best"></p>
+  <div class="btn">OK — тағы ойнау</div>
+</div>
+
+<script>
+var cv=document.getElementById('c'),x=cv.getContext('2d'),W,H,GY;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;GY=H*0.52}
+addEventListener('resize',size);size();
+function rnd(a,b){return a+Math.random()*(b-a)}
+
+/* дала: тау, төбелер, жұлдыздар */
+var hills=[[],[],[]],stars=[];
+function makeLand(){
+  for(var l=0;l<3;l++){hills[l]=[];var y=0;for(var i=0;i<=24;i++){y+=rnd(-1,1)*(l==0?.05:.025);y*=.85;hills[l].push(y)}}
+  stars=[];for(var i=0;i<70;i++)stars.push([Math.random(),Math.random()*.4,Math.random()]);
+}
+makeLand();
+function ridge(l,base,amp,col,off){
+  x.fillStyle=col;x.beginPath();x.moveTo(0,H);
+  var n=hills[l].length-1;
+  for(var i=0;i<=n;i++){var px=(i/n)*W*1.2-((off||0)%(W*.2));x.lineTo(px,base+hills[l][i]*amp*H)}
+  x.lineTo(W,H);x.closePath();x.fill();
+}
+var bg=document.createElement('canvas'),bx=bg.getContext('2d');
+function bakeWorld(){
+  bg.width=W;bg.height=H;var o=x;x=bx;
+  var g=x.createLinearGradient(0,0,0,GY);
+  g.addColorStop(0,'#2a1c3d');g.addColorStop(.55,'#8a4a5c');g.addColorStop(1,'#f3a65c');
+  x.fillStyle=g;x.fillRect(0,0,W,GY+2);
+  x.fillStyle='rgba(255,255,255,.45)';for(var i=0;i<stars.length;i++){var s=stars[i];x.fillRect(s[0]*W,s[1]*H,2,2)}
+  var sg=x.createRadialGradient(W*.72,GY-H*.02,0,W*.72,GY-H*.02,H*.22);
+  sg.addColorStop(0,'rgba(255,214,140,.95)');sg.addColorStop(.25,'rgba(255,190,110,.55)');sg.addColorStop(1,'rgba(255,170,90,0)');
+  x.fillStyle=sg;x.fillRect(0,0,W,GY+2);
+  ridge(0,GY-H*.09,.9,'#5b3550',0);ridge(1,GY-H*.03,.6,'#7a4652',0);
+  var gg=x.createLinearGradient(0,GY,0,H);
+  gg.addColorStop(0,'#b8794a');gg.addColorStop(.35,'#8e6a3c');gg.addColorStop(1,'#4c4224');
+  x.fillStyle=gg;x.fillRect(0,GY,W,H-GY);
+  x.strokeStyle='rgba(60,45,20,.35)';x.lineWidth=2;
+  for(var i=0;i<grass.length;i++){var q=grass[i],py=GY+q[1]*(H-GY),sc=.4+q[1],px=q[0]*W;
+    x.beginPath();x.moveTo(px,py);x.lineTo(px-3*sc,py-12*sc);x.moveTo(px+4*sc,py);x.lineTo(px+6*sc,py-15*sc);x.stroke()}
+  x=o;
+}
+function drawWorld(t){x.drawImage(bg,0,0)}
+var grass=[];for(var i=0;i<90;i++)grass.push([Math.random(),Math.random()]);
+bakeWorld();addEventListener('resize',bakeWorld);
+
+/* аңдар */
+var KIND={
+  hare:{pts:1,spd:[.16,.26],size:.032,col:'#d9c3a3',ear:1},
+  fox:{pts:3,spd:[.11,.17],size:.042,col:'#d8742c',tail:1},
+  gold:{pts:10,spd:[.24,.3],size:.04,col:'#ffd45a',tail:1,glow:1},
+  wolf:{pts:0,spd:[.08,.12],size:.058,col:'#6d6a73',bad:1}
+};
+var prey=[],parts=[],pops=[];
+function spawn(){
+  var r=Math.random(),k=r<.5?'hare':r<.78?'fox':r<.86?'gold':'wolf';
+  var lane=Math.random(),dir=Math.random()<.5?1:-1,K=KIND[k];
+  prey.push({k:k,lane:lane,dir:dir,x:dir>0?-0.08:1.08,v:rnd(K.spd[0],K.spd[1]),ph:Math.random()*9,zig:k=='hare'?rnd(.6,1.4):0,stop:0});
+}
+function pY(p){return GY+H*.06+p.lane*(H-GY-H*.12)+ (p.zig?Math.sin(p.ph*1.3)*H*.018*p.zig:0)}
+function pS(p){return (.65+p.lane*.6)*KIND[p.k].size*H}
+function drawPrey(p,t){
+  var K=KIND[p.k],s=pS(p),px=p.x*W,py=pY(p),hop=Math.abs(Math.sin(p.ph*4))*s*.35;
+  x.save();x.translate(px,py);
+  x.fillStyle='rgba(0,0,0,.22)';x.beginPath();x.ellipse(0,0,s*.9,s*.22,0,0,7);x.fill();
+  x.translate(0,-hop);x.scale(p.dir,1);
+  if(K.glow){x.shadowColor='#ffd45a';x.shadowBlur=s*.9}
+  x.fillStyle=K.col;
+  x.beginPath();x.ellipse(0,-s*.45,s*.75,s*.42,0,0,7);x.fill();               // дене
+  x.beginPath();x.ellipse(s*.7,-s*.75,s*.3,s*.26,0,0,7);x.fill();              // бас
+  if(K.ear){x.beginPath();x.ellipse(s*.62,-s*1.15,s*.08,s*.32,-.3,0,7);x.ellipse(s*.78,-s*1.12,s*.08,s*.3,.2,0,7);x.fill()}
+  if(K.tail){x.beginPath();x.moveTo(-s*.65,-s*.55);x.quadraticCurveTo(-s*1.5,-s*.9,-s*1.55,-s*.3);x.quadraticCurveTo(-s*1.1,-s*.35,-s*.65,-s*.3);x.fill();
+    x.fillStyle='#fff3e0';x.beginPath();x.arc(-s*1.5,-s*.4,s*.12,0,7);x.fill();x.fillStyle=K.col}
+  if(p.k=='fox'||p.k=='gold'){x.beginPath();x.moveTo(s*.55,-s*.95);x.lineTo(s*.62,-s*1.25);x.lineTo(s*.75,-s*.98);x.moveTo(s*.78,-s*.98);x.lineTo(s*.9,-s*1.22);x.lineTo(s*.95,-s*.92);x.fill()}
+  if(K.bad){x.beginPath();x.moveTo(s*.5,-s*.95);x.lineTo(s*.58,-s*1.3);x.lineTo(s*.72,-s*.98);x.moveTo(s*.76,-s*.98);x.lineTo(s*.88,-s*1.28);x.lineTo(s*.95,-s*.9);x.fill();
+    x.beginPath();x.moveTo(-s*.7,-s*.6);x.lineTo(-s*1.3,-s*.25);x.lineTo(-s*.7,-s*.35);x.fill();
+    x.fillStyle='#ffdd55';x.beginPath();x.arc(s*.85,-s*.8,s*.05,0,7);x.fill()}
+  x.shadowBlur=0;
+  var leg=Math.sin(p.ph*8)*s*.2;x.strokeStyle=K.col;x.lineWidth=s*.12;x.lineCap='round';
+  x.beginPath();x.moveTo(s*.35,-s*.2);x.lineTo(s*.35+leg,0);x.moveTo(-s*.35,-s*.2);x.lineTo(-s*.35-leg,0);x.stroke();
+  x.restore();
+}
+
+/* бүркіт */
+var mx=W/2,my=H*.3,ex=W/2,ey=H*.25,dive=null,wing=0,hurt=0;
+function drawEagle(t){
+  var s=H*.075,flap=Math.sin(t/120)*.5,px=ex,py=ey,sc=1,ang=0;
+  if(dive){var k=dive.k,e=k<.5?k*2:1-(k-.5)*2;sc=1-e*.35;flap=-.9*e+flap*(1-e);ang=Math.atan2(dive.ty-dive.sy,dive.tx-dive.sx)*e*.6}
+  x.save();x.translate(px,py);x.rotate(ang);x.scale(sc,sc);
+  if(hurt>0){x.globalAlpha=.5+.5*Math.sin(t/40)}
+  x.fillStyle='#3a2416';
+  for(var sd=-1;sd<=1;sd+=2){x.save();x.scale(sd,1);x.rotate(flap*.6);
+    x.beginPath();x.moveTo(s*.15,-s*.1);x.quadraticCurveTo(s*.9,-s*.55,s*1.75,-s*.2);
+    x.lineTo(s*1.55,-s*.05);x.lineTo(s*1.62,s*.05);x.lineTo(s*1.38,s*.08);x.lineTo(s*1.42,s*.18);x.lineTo(s*1.15,s*.16);
+    x.quadraticCurveTo(s*.6,s*.2,s*.15,s*.2);x.fill();x.restore()}
+  x.beginPath();x.ellipse(0,s*.05,s*.28,s*.5,0,0,7);x.fill();
+  x.beginPath();x.moveTo(-s*.2,s*.45);x.lineTo(0,s*.85);x.lineTo(s*.2,s*.45);x.fill();
+  x.fillStyle='#e9dcc6';x.beginPath();x.arc(0,-s*.42,s*.2,0,7);x.fill();
+  x.fillStyle='#f2b33d';x.beginPath();x.moveTo(-s*.07,-s*.45);x.lineTo(0,-s*.25);x.lineTo(s*.07,-s*.45);x.fill();
+  x.restore();x.globalAlpha=1;
+}
+var ax=0,ay=0,lock=null;
+function assist(){
+  ax=mx;ay=my;lock=null;if(my<GY-H*.04)return;
+  var R=H*.16,bd=R;
+  for(var i=0;i<prey.length;i++){var p=prey[i],px=p.x*W,py=pY(p)-pS(p)*.5,d=Math.hypot(px-mx,py-my);if(d<bd){bd=d;lock=p}}
+  if(lock){var k=1-bd/R*.6;ax=mx+(lock.x*W-mx)*k;ay=my+(pY(lock)-pS(lock)*.5-my)*k}
+}
+function drawAim(){
+  var r=H*.045,ok=my>GY-H*.04,mx=ax,my=ay;
+  if(lock){x.fillStyle='rgba(255,207,110,.18)';x.beginPath();x.arc(mx,my,r*1.25,0,7);x.fill()}
+  x.strokeStyle=lock?'#ffcf6e':ok?'rgba(255,230,180,.95)':'rgba(255,255,255,.35)';x.lineWidth=3;
+  x.beginPath();x.arc(mx,my,r,0,7);x.stroke();
+  x.beginPath();x.moveTo(mx-r*1.4,my);x.lineTo(mx-r*.6,my);x.moveTo(mx+r*.6,my);x.lineTo(mx+r*1.4,my);
+  x.moveTo(mx,my-r*1.4);x.lineTo(mx,my-r*.6);x.moveTo(mx,my+r*.6);x.lineTo(mx,my+r*1.4);x.stroke();
+}
+
+/* ойын күйі */
+var state='start',score=0,combo=1,timeLeft=60,spawnT=0,last=0,shake=0;
+var $=function(i){return document.getElementById(i)};
+function best(){try{return +localStorage.getItem('burkit_best')||0}catch(e){return 0}}
+function setBest(v){try{localStorage.setItem('burkit_best',v)}catch(e){}}
+function begin(){state='play';score=0;combo=1;timeLeft=60;prey=[];parts=[];pops=[];dive=null;hurt=0;
+  $('start').className='ui hide';$('over').className='ui hide';$('hud').style.display='flex';hud()}
+function end(){state='over';$('hud').style.display='none';
+  var b=best(),nb=score>b;if(nb)setBest(score);
+  $('final').textContent=score+' ұпай';$('best').textContent=nb?'Жаңа рекорд!':'Рекорд: '+b;
+  $('over').className='ui'}
+function hud(){$('sc').textContent=score;$('combo').textContent='×'+combo;$('tm').textContent=Math.ceil(Math.max(0,timeLeft))}
+function pop(px,py,txt,col){pops.push({x:px,y:py,t:0,s:txt,c:col})}
+function burst(px,py,col){for(var i=0;i<14;i++)parts.push({x:px,y:py,vx:rnd(-1,1)*H*.4,vy:rnd(-1.2,-.2)*H*.4,t:0,c:col})}
+
+function strike(tx,ty){
+  var r=H*.09,hit=null,bd=1e9;
+  for(var i=0;i<prey.length;i++){var p=prey[i],dx=p.x*W-tx,dy=pY(p)-pS(p)*.5-ty,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<r+pS(p)*.6&&d<bd){bd=d;hit=p}}
+  if(!hit&&dive&&dive.lock&&prey.indexOf(dive.lock)>=0){var L=dive.lock,dd=Math.hypot(L.x*W-tx,pY(L)-ty);if(dd<H*.2)hit=L}
+  if(!hit){combo=1;pop(tx,ty,'Құр қалды','#ffffffaa');hud();return}
+  prey.splice(prey.indexOf(hit),1);
+  var K=KIND[hit.k];
+  if(K.bad){timeLeft-=5;combo=1;hurt=1.2;shake=.4;pop(tx,ty,'Қасқыр! −5 сек','#ff7a6b');burst(tx,ty,'#9a96a0')}
+  else{var g=K.pts*combo;score+=g;pop(tx,ty,'+'+g+(combo>1?'  ×'+combo:''),hit.k=='gold'?'#ffe07a':'#fff');
+    burst(tx,ty,K.col);combo=Math.min(combo+1,5);if(hit.k=='gold')timeLeft+=3}
+  hud();
+}
+
+function frame(now){
+  var dt=Math.min(.05,(now-(last||now))/1000);last=now;
+  if(state=='play'){
+    timeLeft-=dt;if(timeLeft<=0){hud();end()}
+    spawnT-=dt;if(spawnT<=0){spawn();spawnT=rnd(.45,1)*(timeLeft>20?1:.7)}
+    if(Math.floor(timeLeft+dt)!=Math.floor(timeLeft))hud();
+  }
+  for(var i=prey.length-1;i>=0;i--){var p=prey[i];
+    if(p.k=='fox'&&!p.stop&&Math.random()<dt*.25)p.stop=rnd(.4,1);
+    if(p.stop>0){p.stop-=dt}else{p.x+=p.dir*p.v*dt;p.ph+=dt*3}
+    if(p.x<-.15||p.x>1.15)prey.splice(i,1)}
+  // бүркіт курсорға ереді
+  if(dive){dive.k+=dt/.3;
+    var k=dive.k,e=k<.5?Math.sin(k*Math.PI):1-Math.sin((k-.5)*Math.PI)*0;
+    if(k<.5){ex=dive.sx+(dive.tx-dive.sx)*(k*2);ey=dive.sy+(dive.ty-dive.sy)*(k*2)*(k*2)}
+    else{var q=(k-.5)*2;ex=dive.tx+(mx-dive.tx)*q;ey=dive.ty+(Math.min(my,GY-H*.08)-dive.ty)*q}
+    if(!dive.done&&k>=.5){dive.done=1;strike(dive.tx,dive.ty)}
+    if(k>=1)dive=null}
+  else{var ty=Math.min(my,GY-H*.08);ex+=(mx-ex)*Math.min(1,dt*12);ey+=(ty-ey)*Math.min(1,dt*12)}
+  if(hurt>0)hurt-=dt;
+  // сурет
+  x.save();if(shake>0){shake-=dt;x.translate(rnd(-1,1)*12*shake,rnd(-1,1)*12*shake)}
+  drawWorld(now);
+  prey.sort(function(a,b){return a.lane-b.lane});
+  for(i=0;i<prey.length;i++)drawPrey(prey[i],now);
+  for(i=parts.length-1;i>=0;i--){var o=parts[i];o.t+=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.vy+=H*1.2*dt;
+    if(o.t>.7){parts.splice(i,1);continue}x.globalAlpha=1-o.t/.7;x.fillStyle=o.c;x.fillRect(o.x,o.y,H*.008,H*.008)}
+  x.globalAlpha=1;
+  drawEagle(now);
+  for(i=pops.length-1;i>=0;i--){var u=pops[i];u.t+=dt;if(u.t>1.1){pops.splice(i,1);continue}
+    x.globalAlpha=1-u.t/1.1;x.fillStyle=u.c;x.font='800 '+(H*.055)+'px Manrope,Arial';x.textAlign='center';
+    x.fillText(u.s,u.x,u.y-u.t*H*.08)}
+  x.globalAlpha=1;
+  if(state=='play'){assist();drawAim()}
+  x.restore();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+// фон аңдары мәзірде де жүгіріп жүрсін
+setInterval(function(){if(state!='play'&&prey.length<5)spawn()},900);
+
+function act(){
+  if(state!='play'){begin();return}
+  assist();if(dive||ay<GY-H*.04)return;
+  dive={sx:ex,sy:ey,tx:ax,ty:Math.max(ay,GY),k:0,lock:lock};
+}
+addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
+addEventListener('mousedown',function(e){mx=e.clientX;my=e.clientY;act();e.preventDefault()});
+addEventListener('keydown',function(e){if(e.keyCode==13){act();e.preventDefault()}},true);
+</script></body></html>
