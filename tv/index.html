@@ -23,6 +23,15 @@ canvas{display:block;position:fixed;left:0;top:0}
   font-size:5.2vh;font-weight:800;text-shadow:0 .4vh 1.6vh rgba(0,0,0,.55);pointer-events:none}
 #hud small{display:block;font-size:2.2vh;font-weight:700;opacity:.7;letter-spacing:.08em;text-transform:uppercase}
 #combo{color:#ffcf6e}
+#qr{position:fixed;right:3vw;bottom:4vh;background:rgba(20,12,24,.82);border-radius:2vh;padding:2vh;text-align:center;
+  transition:opacity .3s;width:24vh}
+#qr.hide{opacity:0}
+#qrimg{background:#fff;border-radius:1.2vh;padding:1vh;width:20vh;height:20vh;margin:0 auto}
+#qrimg img{width:100%;height:100%;image-rendering:pixelated;display:block}
+#qr .qt{font-size:2.5vh;font-weight:800;margin-top:1.4vh;color:#ffcf6e}
+#qr .qs{font-size:1.9vh;font-weight:600;margin-top:.5vh;color:rgba(255,247,234,.75)}
+#padok{position:fixed;left:50%;bottom:3vh;transform:translateX(-50%);font-size:2.4vh;font-weight:800;color:#ffcf6e;
+  background:rgba(20,12,24,.7);padding:.8vh 2vw;border-radius:5vh;display:none;pointer-events:none}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="hud" style="display:none"><div><small>Ұпай</small><span id="sc">0</span></div>
@@ -233,4 +242,43 @@ function act(){
 addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY});
 addEventListener('mousedown',function(e){mx=e.clientX;my=e.clientY;act();e.preventDefault()});
 addEventListener('keydown',function(e){if(e.keyCode==13){act();e.preventDefault()}},true);
-</script></body></html>
+</script><div id="qr"><div id="qrimg"></div><div class="qt">Телефонмен ойна</div><div class="qs" id="qrs">Камерамен сканерле</div></div>
+<div id="padok">📱 Телефон қосулы</div>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+var padConn=null;
+function padStatus(t){document.getElementById('qrs').textContent=t}
+function padSend(o){if(padConn&&padConn.open)try{padConn.send(o)}catch(e){}}
+function onPad(d){
+  if(!d)return;
+  if(d.t=='m'){mx=Math.max(0,Math.min(W,mx+d.x*W));my=Math.max(0,Math.min(H,my+d.y*H))}
+  else if(d.t=='a'){act()}
+}
+function initPad(){
+  if(!window.Peer){padStatus('Байланыс жоқ');return}
+  var id='burkit-'+Math.random().toString(36).slice(2,8);
+  var peer=new Peer(id,{debug:0});
+  peer.on('open',function(){
+    var url=location.href.split('#')[0].split('?')[0].replace(/index\.html$/,'');
+    if(url.slice(-1)!='/')url+='/';url+='pad.html#'+id;window.PADURL=url;
+    try{var q=qrcode(0,'M');q.addData(url);q.make();document.getElementById('qrimg').innerHTML=q.createImgTag(6,0)}catch(e){}
+    padStatus('Камерамен сканерле');
+  });
+  peer.on('connection',function(c){
+    c.on('open',function(){if(padConn)try{padConn.close()}catch(e){};padConn=c;padStatus('Қосылды ✓');document.getElementById('padok').style.display=state=='play'?'block':'none'});
+    c.on('data',onPad);
+    c.on('close',function(){if(padConn==c){padConn=null;padStatus('Камерамен сканерле');document.getElementById('padok').style.display='none'}});
+  });
+  peer.on('disconnected',function(){try{peer.reconnect()}catch(e){}});
+  peer.on('error',function(e){padStatus('Қайта қосылуда…');setTimeout(function(){try{peer.reconnect()}catch(_){}},3000)});
+}
+var _strike=strike;strike=function(tx,ty){var s0=score,t0=timeLeft;_strike(tx,ty);
+  if(timeLeft<t0-1)padSend({t:'v',p:[80,60,80]});else if(score>s0)padSend({t:'v',p:[40]})};
+var _begin=begin;begin=function(){_begin();document.getElementById('qr').className='hide';
+  document.getElementById('padok').style.display=padConn?'block':'none';padSend({t:'s',s:'play'})};
+var _end=end;end=function(){_end();document.getElementById('qr').className='';document.getElementById('padok').style.display='none';
+  padSend({t:'s',s:'over',score:score})};
+initPad();
+</script>
+</body></html>
