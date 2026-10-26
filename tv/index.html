@@ -18,12 +18,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .brand h1{font-size:10vh;font-weight:800;line-height:.9;color:var(--gold);letter-spacing:-.02em}
 .brand span{font-size:2.8vh;font-weight:700;opacity:.7;margin:0 0 1vh 2vw}
 .grid{display:flex;flex-wrap:wrap;margin:3vh -1vw 0}
-.card{width:46%;margin:1.4vh 1.5%;height:30vh;border-radius:2.6vh;position:relative;overflow:hidden;background:var(--card);
+.card{width:30.3%;margin:1.4vh 1.5%;height:30vh;border-radius:2.6vh;position:relative;overflow:hidden;background:var(--card);
   transition:transform .15s,box-shadow .15s;box-shadow:0 1.4vh 4vh rgba(0,0,0,.35)}
 .card canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 .card .cap{position:absolute;left:0;right:0;bottom:0;padding:2.2vh 1.8vw 2vh;background:linear-gradient(rgba(12,8,14,0),rgba(12,8,14,.94))}
-.card h2{font-size:4.6vh;font-weight:800;line-height:1.05}
-.card p{font-size:2.3vh;font-weight:700;opacity:.72;margin-top:.6vh}
+.card h2{font-size:4vh;font-weight:800;line-height:1.05}
+.card p{font-size:2.05vh;font-weight:700;opacity:.72;margin-top:.6vh}
 .card .bst{position:absolute;right:1.6vw;top:1.8vh;font-size:2vh;font-weight:800;background:rgba(12,8,14,.6);padding:.6vh 1vw;border-radius:4vh}
 .card.on{transform:scale(1.04);box-shadow:0 0 0 .7vh var(--gold),0 2vh 6vh rgba(0,0,0,.55)}
 .qrbox{width:46vh;margin-left:3vw;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
@@ -51,6 +51,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .panel .big{font-size:10vh;font-weight:800;margin-top:1vh}
 .panel .btn{margin-top:5vh;font-size:4.2vh;font-weight:800;background:var(--gold);color:#24160c;padding:2.2vh 5.5vw;border-radius:10vh}
 .panel .btn.on{background:#fff}
+.btns{display:flex}
+.btns .btn{margin:5vh 1.4vw 0}
 .legend{display:flex;flex-wrap:wrap;justify-content:center;margin-top:3.6vh;font-size:3vh;font-weight:700;max-width:80vw}
 .legend span{margin:.6vh 1.8vw}
 .legend b{color:var(--gold)}
@@ -63,6 +65,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   text-shadow:0 .5vh 2vh rgba(0,0,0,.7);opacity:0;transition:opacity .25s;pointer-events:none;z-index:6;white-space:nowrap}
 #cur{position:fixed;left:0;top:0;width:5.2vh;height:5.2vh;margin:-2.6vh 0 0 -2.6vh;border-radius:50%;border:.55vh solid var(--gold);
   box-shadow:0 0 0 .3vh rgba(0,0,0,.35),0 0 2vh rgba(0,0,0,.5);pointer-events:none;z-index:99;display:none}
+#cur2{position:fixed;left:0;top:0;width:5.2vh;height:5.2vh;margin:-2.6vh 0 0 -2.6vh;border-radius:50%;border:.55vh solid #5fd4c4;box-shadow:0 0 0 .3vh rgba(0,0,0,.35),0 0 2vh rgba(0,0,0,.5);pointer-events:none;z-index:99;display:none}
+#cur2:after{content:"2";position:absolute;left:0;right:0;top:50%;margin-top:-1.3vh;text-align:center;font-size:2vh;font-weight:800;color:#5fd4c4}
 #cur:after{content:"";position:absolute;left:50%;top:50%;width:.9vh;height:.9vh;margin:-.45vh 0 0 -.45vh;border-radius:50%;background:var(--gold)}
 </style></head><body>
 <canvas id="c"></canvas>
@@ -75,17 +79,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   <div class="qrbox">
     <div id="qrimg"></div>
     <h3>Телефон — пульт</h3>
-    <p>Камерамен сканерлеңіз немесе телефонда ашыңыз:</p>
+    <p>Екі адамға дейін қосыла алады. Сканерлеңіз немесе ашыңыз:</p>
     <div id="plink"></div>
     <div id="pcode"></div>
     <div id="pst">Дайындалуда…</div>
   </div>
   <div class="hint">OK — ашу · Back — мәзірге · қызыл түйме — дыбыс</div>
-  <div class="author">Автор: Айдынбай Нұртілек · 8 702 476 14 49 · github.com/Aydynbai</div>
+  <div class="author">Aydynbai · github.com/Aydynbai/tg-game</div>
 </div>
 <div id="gameui"></div>
 <div id="toast"></div>
-<div id="cur"></div>
+<div id="cur"></div><div id="cur2" class="c2"></div>
 
 <script src="sound.js"></script>
 <script>
@@ -130,15 +134,17 @@ P.ui=document.getElementById('gameui');
 P.panelCb=null;
 P.panel=function(o){
   var old=P.ui.querySelector('.panel');if(old)old.parentNode.removeChild(old);
-  P.panelCb=null;if(!o)return;
+  P.panelCb=null;P.panelBtns=null;if(!o)return;
   var h='';
   if(o.title)h+='<h1>'+P.esc(o.title)+'</h1>';
   if(o.sub)h+='<div class="sub">'+P.esc(o.sub)+'</div>';
   if(o.big!=null)h+='<div class="big">'+P.esc(o.big)+'</div>';
   if(o.text)h+='<p>'+P.esc(o.text)+'</p>';
   if(o.legend){h+='<div class="legend">';o.legend.forEach(function(l){h+='<span'+(l[2]?' class="bad"':'')+'><b>'+P.esc(l[0])+'</b> '+P.esc(l[1])+'</span>'});h+='</div>'}
-  h+='<div class="btn" data-act="panel">'+P.esc(o.btn||'OK — бастау')+'</div>';
-  var d=document.createElement('div');d.className='panel';d.innerHTML=h;P.ui.appendChild(d);P.panelCb=o.on||null;
+  if(o.btns){h+='<div class="btns">';o.btns.forEach(function(b,i){h+='<div class="btn" data-act="panel:'+i+'">'+P.esc(b[0])+'</div>'});h+='</div>'}
+  else h+='<div class="btn" data-act="panel">'+P.esc(o.btn||'OK — бастау')+'</div>';
+  var d=document.createElement('div');d.className='panel';d.innerHTML=h;P.ui.appendChild(d);
+  P.panelBtns=o.btns||null;P.panelCb=o.btns?function(){o.btns[0][1]()}:(o.on||null);
 };
 P.hud=function(items){
   var el=P.ui.querySelector('.hud');
@@ -179,27 +185,32 @@ P.open=function(id){
 };
 
 /* --- енгізу --- */
-var lastAct=0,hoverEl=null,curEl=document.getElementById('cur'),curShown=0;
-P.action=function(){
-  var now=Date.now();if(now-lastAct<160)return;lastAct=now;P.S.wake();
-  var el=document.elementFromPoint(P.mx,P.my),a=el&&el.closest?el.closest('[data-act]'):null;
+var lastAct=[0,0],hoverEl=[],curEl=document.getElementById('cur'),cur2El=document.getElementById('cur2'),curShown=0;
+P.c2={x:0,y:0,shown:0};
+P.ptr=function(pid){return pid==1?{x:P.c2.x,y:P.c2.y}:{x:P.mx,y:P.my}};
+P.padCount=function(){return 0};
+P.action=function(pid){
+  pid=pid==1?1:0;var now=Date.now();if(now-lastAct[pid]<160)return;lastAct[pid]=now;P.S.wake();
+  var pt=P.ptr(pid),el=document.elementFromPoint(pt.x,pt.y),a=el&&el.closest?el.closest('[data-act]'):null;
   if(a){var k=a.getAttribute('data-act');
     if(k=='back'){P.home();return}
     if(k.indexOf('open:')==0){P.open(k.slice(5));return}
-    if(k=='panel'&&P.panelCb){P.S.click();P.panelCb();return}}
+    if(k=='panel'&&P.panelCb){P.S.click();P.panelCb();return}
+    if(k.indexOf('panel:')==0&&P.panelBtns){var f=P.panelBtns[+k.slice(6)][1];P.S.click();f();return}}
+  if(P.panelBtns)return;
   if(!P.cur)return;
   if(P.panelCb){P.S.click();P.panelCb();return}
-  if(P.cur.onAction)P.cur.onAction(P.mx,P.my);
+  if(P.cur.onAction)P.cur.onAction(pt.x,pt.y,pid);
 };
 P.back=function(){if(P.cur)P.home()};
-function setCur(x,y){P.mx=Math.max(0,Math.min(P.W,x));P.my=Math.max(0,Math.min(P.H,y));curShown=1}
+function setCur(x,y,pid){x=Math.max(0,Math.min(P.W,x));y=Math.max(0,Math.min(P.H,y));if(pid==1){P.c2.x=x;P.c2.y=y;P.c2.shown=1}else{P.mx=x;P.my=y;curShown=1}}
 addEventListener('mousemove',function(e){setCur(e.clientX,e.clientY)});
 addEventListener('mousedown',function(e){setCur(e.clientX,e.clientY);P.action();e.preventDefault()});
-function hubNav(k){
+function hubNav(k,pid){
   var cards=document.querySelectorAll('.card');if(!cards.length)return;
-  var i=hoverEl?Array.prototype.indexOf.call(cards,hoverEl):-1;
+  var i=hoverEl[0]?Array.prototype.indexOf.call(cards,hoverEl[0]):-1;
   if(i<0)i=0;else if(k==37)i=Math.max(0,i-1);else if(k==39)i=Math.min(cards.length-1,i+1);else if(k==38)i=Math.max(0,i-2);else if(k==40)i=Math.min(cards.length-1,i+2);
-  var r=cards[i].getBoundingClientRect();setCur(r.left+r.width/2,r.top+r.height/2);
+  var r=cards[i].getBoundingClientRect();setCur(r.left+r.width/2,r.top+r.height/2,pid);
 }
 P.muteToggle=function(){var on=P.S.toggle();P.toast(on?'Дыбыс қосулы':'Дыбыс өшірулі');P.padSend({t:'snd',on:on})};
 addEventListener('keydown',function(e){
@@ -217,8 +228,9 @@ function frame(now){
   var dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;
   try{if(P.cur)P.cur.frame(dt,now);else P.ctx.drawImage(hubBg,0,0)}catch(e){if(window.console)console.error(e)}
   if(curShown){curEl.style.display='block';curEl.style.transform='translate('+P.mx+'px,'+P.my+'px)';curEl.style.opacity=(P.cur&&P.cur.hideCursor&&!P.panelCb)?0:1}
-  var el=document.elementFromPoint(P.mx,P.my),a=el&&el.closest?el.closest('[data-act]'):null;
-  if(a!==hoverEl){if(hoverEl)hoverEl.classList.remove('on');if(a)a.classList.add('on');hoverEl=a}
+  if(P.c2.shown){cur2El.style.display='block';cur2El.style.transform='translate('+P.c2.x+'px,'+P.c2.y+'px)';cur2El.style.opacity=(P.cur&&P.cur.hideCursor&&!P.panelCb)?0:1}
+  var hs=[];[P.ptr(0),P.c2.shown?P.ptr(1):null].forEach(function(pt){if(!pt)return;var el=document.elementFromPoint(pt.x,pt.y),a=el&&el.closest?el.closest('[data-act]'):null;if(a)hs.push(a)});
+  hoverEl.forEach(function(e){if(hs.indexOf(e)<0)e.classList.remove('on')});hs.forEach(function(e){e.classList.add('on')});hoverEl=hs;
   requestAnimationFrame(frame);
 }
 </script>
@@ -227,21 +239,26 @@ function frame(now){
 <script src="games/asyq.js"></script>
 <script src="games/oyu.js"></script>
 <script src="games/togyz.js"></script>
+<script src="games/chess.js"></script>
+<script src="games/doiby.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 /* ===== телефон-пульт ===== */
-var padConn=null;
-P.padSend=function(o){if(padConn&&padConn.open)try{padConn.send(o)}catch(e){}};
+var pads=[null,null];
+P.padCount=function(){return (pads[0]?1:0)+(pads[1]?1:0)};
+P.padSend=function(o,pid){pads.forEach(function(c,i){if(c&&c.open&&(pid==null||pid==i))try{c.send(o)}catch(e){}})};
+P.vib=function(p,pid){P.padSend({t:'v',p:p},pid)};
 function pst(t,ok){var e=document.getElementById('pst');e.textContent=t;e.className=ok?'ok':''}
-function onPad(d){
+function padInfo(){var n=P.padCount();if(n==0)pst('Қосылуды күтуде');else pst((n==2?'2 телефон':'1 телефон')+' қосылды ✓',true)}
+function onPad(d,pid){
   if(!d)return;
-  if(d.t=='m')setCur(P.mx+d.x*P.W,P.my+d.y*P.H);
-  else if(d.t=='a')P.action();
+  if(d.t=='m'){var pt=P.ptr(pid);if(pid==1&&!P.c2.shown){pt={x:P.W*.7,y:P.H*.5}}setCur(pt.x+d.x*P.W,pt.y+d.y*P.H,pid)}
+  else if(d.t=='a')P.action(pid);
   else if(d.t=='b'){if(P.cur)P.back()}
   else if(d.t=='mute')P.muteToggle();
-  else if(d.t=='k'){if(P.cur){if(P.cur.onKey)P.cur.onKey(d.k)}else hubNav(d.k)}
+  else if(d.t=='k'){if(P.cur){if(P.cur.onKey)P.cur.onKey(d.k,pid)}else hubNav(d.k,pid)}
 }
 function initPad(){
   if(!window.Peer){pst('Интернет байланысын тексеріңіз');return}
@@ -255,14 +272,19 @@ function initPad(){
     try{var q=qrcode(0,'M');q.addData(url);q.make();document.getElementById('qrimg').innerHTML=q.createImgTag(8,0)}catch(e){}
     document.getElementById('plink').textContent=(base+'p').replace(/^https?:\/\//,'');
     document.getElementById('pcode').innerHTML='Код: <b>'+code+'</b>';
-    if(!padConn)pst('Қосылуды күтуде');
+    padInfo();
   });
   peer.on('connection',function(c){
-    c.on('open',function(){if(padConn&&padConn!==c)try{padConn.close()}catch(e){}
-      padConn=c;P.padOn=true;pst('Телефон қосылды ✓',true);P.toast('Телефон қосылды');
-      P.padSend({t:'g',name:P.cur?P.cur.title:'Алаң'});P.padSend({t:'snd',on:P.S.isOn()})});
-    c.on('data',onPad);
-    c.on('close',function(){if(padConn===c){padConn=null;P.padOn=false;pst('Қосылуды күтуде');P.toast('Телефон ажырады')}});
+    c.on('open',function(){
+      var pid=pads[0]==null?0:pads[1]==null?1:-1;
+      if(pid<0){try{c.send({t:'full'})}catch(e){}setTimeout(function(){try{c.close()}catch(e){}},500);return}
+      pads[pid]=c;c.pid=pid;padInfo();P.toast((pid+1)+'-ойыншы қосылды');
+      if(pid==1&&!P.c2.shown){P.c2.x=P.W*.7;P.c2.y=P.H*.5;P.c2.shown=1}
+      c.send({t:'pl',n:pid+1});c.send({t:'g',name:P.cur?P.cur.title:'Алаң'});c.send({t:'snd',on:P.S.isOn()});
+      if(P.cur&&P.cur.onPads)P.cur.onPads();
+      c.on('data',function(d){onPad(d,c.pid)});
+    });
+    c.on('close',function(){if(c.pid!=null&&pads[c.pid]===c){pads[c.pid]=null;if(c.pid==1){P.c2.shown=0;cur2El.style.display='none'}padInfo();P.toast((c.pid+1)+'-ойыншы ажырады');if(P.cur&&P.cur.onPads)P.cur.onPads()}});
   });
   peer.on('disconnected',function(){setTimeout(function(){try{peer.reconnect()}catch(e){}},1500)});
   peer.on('error',function(e){

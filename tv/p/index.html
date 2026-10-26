@@ -10,7 +10,9 @@
 html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;overflow:hidden;touch-action:none;overscroll-behavior:none}
 body{display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 14px)}
 header{display:flex;align-items:center;padding:6px 2px 12px}
-h1{font-size:24px;font-weight:800;color:var(--gold);flex:1}
+h1{font-size:22px;font-weight:800;color:var(--ink);flex:1;line-height:1.1}
+#pl{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin-right:12px;color:#24160c}
+#pl.p1{background:var(--gold)}#pl.p2{background:#5fd4c4}
 #game{font-size:13px;font-weight:700;opacity:.6;display:block;color:var(--ink)}
 .chip{font-size:13px;font-weight:800;padding:7px 11px;border-radius:20px;background:rgba(255,255,255,.08);margin-left:6px;border:0;color:var(--ink);font-family:inherit}
 #st.ok{background:rgba(120,220,140,.16);color:#9be8ad}
@@ -36,8 +38,8 @@ button.on{transform:scale(.96);filter:brightness(1.15)}
 #keys button{width:80px;height:62px;margin:5px;border-radius:16px;border:0;background:var(--panel);color:var(--ink);font:800 26px Manrope,system-ui}
 #jerr{color:#ff8c6e;font-weight:700;margin-top:12px;min-height:20px}
 </style></head><body>
-<header><h1>Алаң<span id="game">пульт</span></h1><button class="chip" id="mute">🔊</button><span class="chip" id="st">Қосылуда…</span></header>
-<div id="pad"><p>Саусақпен жүргізіңіз — курсор қозғалады<br>Бір рет түртсеңіз — OK</p><div id="dot"></div></div>
+<header><span id="pl">·</span><h1>Алаң<span id="game">пульт</span></h1><button class="chip" id="mute">🔊</button><span class="chip" id="st">Қосылуда…</span></header>
+<div id="pad"><p>Жүргізу — курсор<br>Түрту — OK</p><div id="dot"></div></div>
 <div class="row arrows"><button data-k="37">◀</button><button data-k="38">▲</button><button data-k="40">▼</button><button data-k="39">▶</button></div>
 <div class="row main"><button id="menu">← Мәзір</button><button id="ok">OK</button></div>
 
@@ -47,7 +49,7 @@ button.on{transform:scale(.96);filter:brightness(1.15)}
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-var code=(location.hash||'').replace('#','').replace(/\D/g,''),conn=null,peer=null,st=document.getElementById('st');
+var full=false,code=(location.hash||'').replace('#','').replace(/\D/g,''),conn=null,peer=null,st=document.getElementById('st');
 function setSt(t,ok){st.textContent=t;st.className='chip'+(ok?' ok':'')}
 function send(o){if(conn&&conn.open)conn.send(o)}
 function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
@@ -59,7 +61,7 @@ function drawCode(){var s=document.querySelectorAll('#code span');for(var i=0;i<
 (function(){var k=document.getElementById('keys'),h='';[1,2,3,4,5,6,7,8,9,'⌫',0,'→'].forEach(function(v){h+='<button data-v="'+v+'">'+v+'</button>'});k.innerHTML=h;
   k.addEventListener('click',function(e){var v=e.target.getAttribute('data-v');if(v==null)return;buzz(10);
     if(v=='⌫')typed=typed.slice(0,-1);else if(v=='→'){if(typed.length==4)go(typed)}else if(typed.length<4){typed+=v;if(typed.length==4)setTimeout(function(){go(typed)},150)}drawCode()})})();
-function go(c){code=c;location.hash=c;document.getElementById('join').style.display='none';connect()}
+function go(c){full=false;code=c;location.hash=c;document.getElementById('join').style.display='none';connect()}
 
 function connect(){
   if(!/^\d{4}$/.test(code)){showJoin();return}
@@ -74,8 +76,11 @@ function dial(){
   conn.on('data',function(d){if(!d)return;
     if(d.t=='v')buzz(d.p);
     if(d.t=='g')document.getElementById('game').textContent=d.name;
+    if(d.t=='pl'){var e=document.getElementById('pl');e.textContent=d.n;e.className='p'+d.n;document.getElementById('ok').style.background=d.n==2?'#5fd4c4':'';
+      document.getElementById('dot').style.borderColor=d.n==2?'#5fd4c4':'';setSt(d.n+'-ойыншы',true)}
+    if(d.t=='full'){full=true;setSt('Орын жоқ');showJoin('Бұл ТВ-ға екі адам қосылып тұр.')}
     if(d.t=='snd')document.getElementById('mute').textContent=d.on?'🔊':'🔇'});
-  conn.on('close',function(){setSt('Ажырады…');setTimeout(connect,1500)});
+  conn.on('close',function(){if(full)return;setSt('Ажырады…');setTimeout(connect,1500)});
 }
 if(!code){try{var l=localStorage.getItem('alan_last');if(l)code=l}catch(e){}}
 connect();

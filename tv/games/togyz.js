@@ -1,7 +1,7 @@
 /* Тоғызқұмалақ — толық ережесімен, компьютерге қарсы */
 P.register((function(){
-  var G={id:'togyz',title:'Тоғызқұмалақ',sub:'Дала шахматы · компьютерге қарсы',hideCursor:false};
-  var x,W,H,B,st,state='menu',anim=null,aiT=0,flash=null,msg='',DEPTH=3;
+  var G={id:'togyz',title:'Тоғызқұмалақ',sub:'Дала шахматы',hideCursor:false};
+  var x,W,H,B,st,state='menu',anim=null,aiT=0,flash=null,msg='',DEPTH=3,vsAI=true,turn=0;
   var bg=document.createElement('canvas');
 
   function fresh(){var b=[];for(var i=0;i<18;i++)b.push(9);return {b:b,k:[0,0],tz:[-1,-1]}}
@@ -79,44 +79,50 @@ P.register((function(){
   /* ойын барысы */
   function hud(){return;P.hud([['Сіз',(anim?anim.k:st.k)[0],1],['Кезек',(state=='ai'||(state=='anim'&&anim&&anim.side==1))?'Компьютер':'Сіздікі'],['Компьютер',(anim?anim.k:st.k)[1]]])}
   function menu(){state='menu';P.hud(null);st=fresh();
-    P.panel({title:'Тоғызқұмалақ',text:'Өз отауыңызды таңдап OK басыңыз. Құмалақтар сағат тіліне қарсы таралады. Соңғы құмалақ қарсылас отауында жұп сан жасаса, бәрін аласыз. Үш болса, тұздық аласыз. 82 құмалақ жинаған жеңеді.',
-      legend:[['Жұп','— ұтыс'],['3 құмалақ','— тұздық'],['82','— жеңіс']],btn:'OK — бастау',on:begin})}
-  function begin(){P.panel(null);st=fresh();anim=null;state='player';hud()}
+    P.panel({title:'Тоғызқұмалақ',text:'Отауды таңдап OK басыңыз. Құмалақтар сағат тіліне қарсы таралады. Соңғы құмалақ қарсылас отауында жұп сан жасаса, бәрін аласыз, үш болса — тұздық. 82 құмалақ жинаған жеңеді. Екі адам: бірінші телефон — төменгі қатар, екіншісі — жоғарғы.',
+      btns:[['Компьютерге қарсы',function(){begin(true)}],['Екі адам',function(){begin(false)}]]})}
+  function begin(ai){P.panel(null);vsAI=ai;st=fresh();anim=null;turn=0;state='player';hud()}
   function startMove(side,h){var r=apply(st,side,h);anim={side:side,h:h,res:r,i:0,t:0,b:st.b.slice(),k:st.k.slice(),tz:st.tz.slice(),phase:'sow'};anim.b[h]=0;state='anim';P.S.click();hud()}
   function stepAnim(dt){
     var a=anim,spd=a.res.path.length>20?.05:.085;a.t+=dt;
     if(a.phase=='sow'){while(a.t>=spd&&a.i<a.res.path.length){a.t-=spd;var p=a.res.path[a.i++];if(p>=100)a.k[p-100]++;else a.b[p]++;P.S.tick(.35)}
       if(a.i>=a.res.path.length&&a.t>.25){a.phase='cap';a.t=0;
         if(a.res.cap){flash={i:a.res.cap.i,t:.8,tz:a.res.cap.t=='tz'};a.b[a.res.cap.i]=0;a.k[a.side]=a.res.k[a.side];
-          if(a.res.cap.t=='tz'){a.tz=a.res.tz;P.S.win();P.toast(a.side==0?'Тұздық алдыңыз!':'Компьютер тұздық алды',1500)}
-          else{P.S.hit(a.res.cap.n>=10);P.toast((a.side==0?'+':'Компьютер +')+a.res.cap.n,1100)}
+          if(a.res.cap.t=='tz'){a.tz=a.res.tz;P.S.win();P.toast(vsAI?(a.side==0?'Тұздық алдыңыз!':'Компьютер тұздық алды'):(a.side+1)+'-ойыншы тұздық алды!',1500)}
+          else{P.S.hit(a.res.cap.n>=10);P.toast((vsAI?(a.side==0?'':'Компьютер '):(a.side+1)+'-ойыншы ')+'+'+a.res.cap.n,1100)}
           if(a.side==0)P.vib([40])}}}
     else if(a.phase=='cap'&&a.t>(a.res.cap?.6:.05)){
       st={b:a.res.b,k:a.res.k,tz:a.res.tz};var side=a.side;anim=null;
       var f=finish(st,side);if(f){gameOver(f);return}
-      if(side==0){state='ai';aiT=.7}else state='player';hud()}
+      turn=1-side;if(vsAI&&turn==1){state='ai';aiT=.7}else state='player';hud()}
   }
   function gameOver(f){state='over';P.hud(null);var k=f.k||st.k;
-    var wins=P.best('togyz');if(f.w==0){wins++;P.best('togyz',wins);P.S.win()}else P.S.lose();
-    P.panel({sub:f.w==0?'Жеңіс!':f.w==1?'Компьютер жеңді':'Тең ойын',big:k[0]+' : '+k[1],text:'Барлық жеңіс: '+wins,btn:'OK — тағы ойнау',on:begin})}
-  function hoverHole(){if(state!='player')return -1;for(var i=0;i<9;i++){var p=holeXY(i);if(Math.abs(P.mx-p.x)<B.hw*.6&&Math.abs(P.my-p.y)<B.hh*.75+B.h*.1)return st.b[i]>0?i:-1}return -1}
+    var wins=P.best('togyz');if(vsAI&&f.w==0){wins++;P.best('togyz',wins);P.S.win()}else if(f.w>=0)P.S.lose();
+    var sub=f.w<0?'Тең ойын':vsAI?(f.w==0?'Жеңіс!':'Компьютер жеңді'):(f.w==0?'1-ойыншы жеңді!':'2-ойыншы жеңді!');
+    setTimeout(function(){P.panel({sub:sub,big:k[0]+' : '+k[1],text:vsAI?'Компьютерді жеңген саны: '+wins:'',
+      btns:[['Компьютерге қарсы',function(){begin(true)}],['Екі адам',function(){begin(false)}]]})},700)}
+  function curPid(){return !vsAI&&P.padCount()==2?turn:0}
+  function hoverHole(pt){if(state!='player')return -1;pt=pt||P.ptr(curPid());for(var j=0;j<9;j++){var i=turn*9+j,p=holeXY(i);
+    if(Math.abs(pt.x-p.x)<B.hw*.6&&Math.abs(pt.y-p.y)<B.hh*.75+B.h*.1)return st.b[i]>0?i:-1}return -1}
 
   G.start=function(){x=P.ctx;dims();menu()};
   G.resize=function(){dims()};
-  G.onAction=function(){if(state!='player')return;var h=hoverHole();if(h>=0)startMove(0,h)};
+  G.onAction=function(mx,my,pid){if(state!='player')return;
+    if(!vsAI&&pid!=null&&P.padCount()==2&&pid!=turn){P.toast((turn+1)+'-ойыншының кезегі',1000);return}
+    var h=hoverHole({x:mx,y:my});if(h>=0)startMove(turn,h)};
   G.frame=function(dt){
     if(state=='ai'){aiT-=dt;if(aiT<=0){var ms=moves(st,1);if(ms.length)startMove(1,aiMove());}}
     if(state=='anim'&&anim)stepAnim(dt);
     if(flash){flash.t-=dt;if(flash.t<=0)flash=null}
     x.drawImage(bg,0,0);
-    var b=anim?anim.b:st.b,k=anim?anim.k:st.k,tz=anim?anim.tz:st.tz,hv=hoverHole(),prev=hv>=0?apply(st,0,hv).last:-1;
+    var b=anim?anim.b:st.b,k=anim?anim.k:st.k,tz=anim?anim.tz:st.tz,hv=hoverHole(),prev=hv>=0?apply(st,turn,hv).last:-1;
     for(var i=0;i<18;i++){var hl=null;if(i==hv)hl='#ffcf6e';else if(i==prev)hl='rgba(255,207,110,.5)';
       if(flash&&flash.i==i)hl=flash.tz?'#9be8ad':'#ffffff';if(anim&&anim.h==i&&anim.phase=='sow')hl='rgba(255,255,255,.6)';
       drawHole(x,i,b[i],hl,tz[0]==i?0:tz[1]==i?1:-1)}
     drawKazan(x,1,k[1]);drawKazan(x,0,k[0]);
     x.textAlign='center';x.font='800 '+(H*.032)+'px Manrope,Arial';
-    x.fillStyle='rgba(255,176,142,.85)';x.fillText('Компьютер'+(state=='ai'?' ойланып жатыр…':''),W/2,B.y-B.h*.2);
-    x.fillStyle='rgba(155,232,173,.9)';x.fillText(state=='player'?'Сіздің жүрісіңіз — отауды таңдаңыз':'Сіз',W/2,B.y+B.h+B.h*.27);
+    x.fillStyle='rgba(255,176,142,.85)';x.fillText(vsAI?'Компьютер'+(state=='ai'?' ойланып жатыр…':''):'2-ойыншы'+(state=='player'&&turn==1?' — сіздің жүрісіңіз':''),W/2,B.y-B.h*.2);
+    x.fillStyle='rgba(155,232,173,.9)';x.fillText(vsAI?(state=='player'?'Сіздің жүрісіңіз — отауды таңдаңыз':'Сіз'):'1-ойыншы'+(state=='player'&&turn==0?' — сіздің жүрісіңіз':''),W/2,B.y+B.h+B.h*.27);
   };
   G.cover=function(c,w,h){paintBg(c,w,h);var sw=W,sh=H,sB=B;W=w;H=h;var bw=w*.86,bh=bw*.46;B={x:(w-bw)/2,y:h*.42-bh/2,w:bw,h:bh};
     B.hw=bw/10.6;B.hh=bh*.33;B.gap=(bw-9*B.hw)/10;paintBoard(c);var s=fresh();s.b[3]=12;s.b[12]=3;
