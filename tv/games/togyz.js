@@ -61,7 +61,8 @@ P.register((function(){
       c.fillText(i<9?i+1:i-8,p.x,i<9?p.y+B.hh/2+B.h*.06:p.y-B.hh/2-B.h*.025)}
     [0,1].forEach(function(s){var r=kazanRect(s);c.fillStyle='#3d2112';rr(c,r.x,r.y,r.w,r.h,r.h/2);c.fill()});
   }
-  function ball(c,bx,by,r,gold){var g=c.createRadialGradient(bx-r*.35,by-r*.35,r*.1,bx,by,r);
+  function ball(c,bx,by,r,gold){var d=Math.ceil(r*2+2),sp=P.sprite('ball'+(gold?1:0),d,d,function(g2,w){ballRaw(g2,w/2,w/2,r,gold)});c.drawImage(sp,bx-d/2,by-d/2,d,d)}
+  function ballRaw(c,bx,by,r,gold){var g=c.createRadialGradient(bx-r*.35,by-r*.35,r*.1,bx,by,r);
     g.addColorStop(0,gold?'#fff1b8':'#fbf3e6');g.addColorStop(1,gold?'#c9962c':'#9c8a72');c.fillStyle=g;c.beginPath();c.arc(bx,by,r,0,7);c.fill()}
   function drawHole(c,i,n,hl,tzOwner){
     var p=holeXY(i),r=B.hw*.11,cols=3,shown=Math.min(n,24);
@@ -105,8 +106,8 @@ P.register((function(){
   function hoverHole(pt){if(state!='player')return -1;pt=pt||P.ptr(curPid());for(var j=0;j<9;j++){var i=turn*9+j,p=holeXY(i);
     if(Math.abs(pt.x-p.x)<B.hw*.6&&Math.abs(pt.y-p.y)<B.hh*.75+B.h*.1)return st.b[i]>0?i:-1}return -1}
 
-  G.start=function(){x=P.ctx;dims();menu()};
-  G.resize=function(){dims()};
+  G.start=function(){x=P.ctx;dims();G._sig=null;menu()};
+  G.resize=function(){dims();G._sig=null};
   G.onAction=function(mx,my,pid){if(state!='player')return;
     if(!vsAI&&pid!=null&&P.padCount()==2&&pid!=turn){P.toast((turn+1)+'-ойыншының кезегі',1000);return}
     var h=hoverHole({x:mx,y:my});if(h>=0)startMove(turn,h)};
@@ -114,6 +115,7 @@ P.register((function(){
     if(state=='ai'){aiT-=dt;if(aiT<=0){var ms=moves(st,1);if(ms.length)startMove(1,aiMove());}}
     if(state=='anim'&&anim)stepAnim(dt);
     if(flash){flash.t-=dt;if(flash.t<=0)flash=null}
+    var sig=[state,hoverHole(),turn,P.padCount(),st.k.join(),st.tz.join(),W].join('|');if(sig==G._sig&&!anim&&!flash)return;G._sig=sig;
     x.drawImage(bg,0,0,W,H);
     var b=anim?anim.b:st.b,k=anim?anim.k:st.k,tz=anim?anim.tz:st.tz,hv=hoverHole(),prev=hv>=0?apply(st,turn,hv).last:-1;
     for(var i=0;i<18;i++){var hl=null;if(i==hv)hl='#ffcf6e';else if(i==prev)hl='rgba(255,207,110,.5)';

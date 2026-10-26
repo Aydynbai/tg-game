@@ -98,7 +98,7 @@ var P={games:[],cur:null,mx:0,my:0,W:0,H:0,padOn:false};
 (function(){
   var cv=document.getElementById('c');P.ctx=cv.getContext('2d');
   P.Q=1;P.cv=cv;
-  P.size=function(){P.W=innerWidth;P.H=innerHeight;P.Q=Math.min(1,1280/P.W);cv.width=Math.round(P.W*P.Q);cv.height=Math.round(P.H*P.Q);P.ctx.setTransform(P.Q,0,0,P.Q,0,0);
+  P.size=function(){P.W=innerWidth;P.H=innerHeight;P.Q=Math.min(1,1100/P.W);P._spr={};cv.width=Math.round(P.W*P.Q);cv.height=Math.round(P.H*P.Q);P.ctx.setTransform(P.Q,0,0,P.Q,0,0);
     P.dirty=1;if(P.cur&&P.cur.resize)P.cur.resize();if(!P.cur&&P.drawCovers)P.drawCovers()};
   addEventListener('resize',P.size);
 })();
@@ -106,6 +106,8 @@ P.S=window.Sound||{};
 ['wake','mode','play','stop','dive','hit','miss','wolf','note','tick','win','lose','click','chime'].forEach(function(k){if(!P.S[k])P.S[k]=function(){}});
 if(!P.S.isOn)P.S.isOn=function(){return true};if(!P.S.toggle)P.S.toggle=function(){return true};
 P.rnd=function(a,b){return a+Math.random()*(b-a)};
+P._spr={};P.sprite=function(key,w,h,fn){w=Math.ceil(w);h=Math.ceil(h);var k=key+'|'+w+'|'+h+'|'+P.Q,c=P._spr[k];
+  if(!c){c=document.createElement('canvas');c.width=Math.ceil(w*P.Q*1.5);c.height=Math.ceil(h*P.Q*1.5);var g=c.getContext('2d');g.setTransform(P.Q*1.5,0,0,P.Q*1.5,0,0);fn(g,w,h);P._spr[k]=c}return c};
 P.bake=function(cv){cv.width=Math.round(P.W*P.Q);cv.height=Math.round(P.H*P.Q);var c=cv.getContext('2d');c.setTransform(P.Q,0,0,P.Q,0,0);return c};
 P.register=function(g){P.games.push(g)};
 P.best=function(id,v){var k='alan_best_'+id;try{if(v!==undefined){localStorage.setItem(k,v);return v}return +localStorage.getItem(k)||0}catch(e){return 0}};

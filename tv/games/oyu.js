@@ -47,8 +47,8 @@ P.register((function(){
     P.panel({sub:'Ойын аяқталды',big:sc+' деңгей',text:nb?'Жаңа рекорд!':'Рекорд: '+b,btns:[['Жалғыз',function(){begin(false)}],['Екі адам — кезекпен',function(){begin(true)}]]})}
   function hitTile(mx,my){for(var t=0;t<6;t++){var p=tilePos(t);if(Math.hypot(mx-p.x,my-p.y)<TR*1.15)return t}return -1}
 
-  G.start=function(){x=P.ctx;dims();menu()};
-  G.resize=function(){dims()};
+  G.start=function(){x=P.ctx;dims();G._sig=null;menu()};
+  G.resize=function(){dims();G._sig=null};
   G.onAction=function(mx,my,pid){
     if(state!='input')return;if(two&&pid!=null&&P.padCount()==2&&pid!=pl){P.toast((pl+1)+'-ойыншының кезегі',900);return}var t=hitTile(mx,my);if(t<0)return;
     lit=t;litT=.28;P.S.note(t,.5);
@@ -65,6 +65,8 @@ P.register((function(){
       else{state='input';idx=0}}}
     if(state=='done'){timer-=dt;if(timer<=0)next()}
     if(flashOk>0)flashOk-=dt*1.5;
+    var hp0=P.ptr(two&&P.padCount()==2?pl:0),busy=moveT<1||lit>=0||shake>0||flashOk>0,sig=[state,level,idx,lives,pl,hitTile(hp0.x,hp0.y),W].join('|');
+    if(!busy&&sig==G._sig)return;G._sig=busy?null:sig;
     x.save();if(shake>0){shake-=dt;x.translate(P.rnd(-1,1)*14*shake,0)}
     x.drawImage(bg,0,0,W,H);
     var hp=P.ptr(two&&P.padCount()==2?pl:0),hov=state=='input'?hitTile(hp.x,hp.y):-1;

@@ -41,7 +41,7 @@ P.register((function(){
   function drawPrey(c,p,px,py,s){
     var K=KIND[p.k],hop=Math.abs(Math.sin(p.ph*4))*s*.35;
     c.save();c.translate(px,py);c.fillStyle='rgba(0,0,0,.22)';c.beginPath();c.ellipse(0,0,s*.9,s*.22,0,0,7);c.fill();
-    c.translate(0,-hop);c.scale(p.dir,1);if(K.glow){c.shadowColor='#ffd45a';c.shadowBlur=s*.9}
+    c.translate(0,-hop);c.scale(p.dir,1);if(K.glow){c.fillStyle='rgba(255,212,90,.28)';c.beginPath();c.arc(0,-s*.5,s*1.15,0,7);c.fill()}
     c.fillStyle=K.col;c.beginPath();c.ellipse(0,-s*.45,s*.75,s*.42,0,0,7);c.fill();
     c.beginPath();c.ellipse(s*.7,-s*.75,s*.3,s*.26,0,0,7);c.fill();
     if(K.ear){c.beginPath();c.ellipse(s*.62,-s*1.15,s*.08,s*.32,-.3,0,7);c.ellipse(s*.78,-s*1.12,s*.08,s*.3,.2,0,7);c.fill()}

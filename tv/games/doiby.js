@@ -61,7 +61,8 @@ P.register((function(){
     c.strokeStyle='#5fd4c4';c.globalAlpha=.5;c.lineWidth=s*.04;c.strokeRect(bx-m*.55,by-m*.55,8*s+m*1.1,8*s+m*1.1);c.globalAlpha=1;
     [[bx-m*.5,by-m*.5],[bx+8*s+m*.5,by-m*.5],[bx-m*.5,by+8*s+m*.5],[bx+8*s+m*.5,by+8*s+m*.5]].forEach(function(p){P.orn(c,1,p[0],p[1],m*.8,'#5fd4c4',m*.1)});
     for(var r=0;r<8;r++)for(var cc=0;cc<8;cc++){c.fillStyle=(r+cc)%2?'#5b3a22':'#e6d2ab';c.fillRect(bx+cc*s,by+r*s,s,s)}}
-  function disc(c,p,cx,cy,s){var w=side(p)=='w',r=s*.38;
+  function disc(c,p,cx,cy,s){var d=Math.round(s),sp=P.sprite('dc'+p,d,d,function(g2){discRaw(g2,p,d/2,d/2,d)});c.drawImage(sp,cx-d/2,cy-d/2,d,d)}
+  function discRaw(c,p,cx,cy,s){var w=side(p)=='w',r=s*.38;
     c.save();c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(cx+s*.03,cy+s*.06,r,r*.92,0,0,7);c.fill();
     var g=c.createRadialGradient(cx-r*.35,cy-r*.4,r*.1,cx,cy,r);g.addColorStop(0,w?'#fffaf0':'#e0644f');g.addColorStop(1,w?'#cdb994':'#7e1f14');
     c.fillStyle=g;c.beginPath();c.arc(cx,cy,r,0,7);c.fill();
@@ -93,8 +94,8 @@ P.register((function(){
       btns:[['Компьютерге қарсы',function(){begin(true)}],['Екі адам',function(){begin(false)}]]})},800)}
 
   G._dbg=function(){return {turn:turn,state:state,anim:!!anim,all:all.length,sel:sel,opts:opts.length,b:b.join('')}};
-  G.start=function(){x=P.ctx;dims();b=init();menu()};
-  G.resize=function(){dims()};
+  G.start=function(){x=P.ctx;dims();G._sig=null;b=init();menu()};
+  G.resize=function(){dims();G._sig=null};
   G.onKey=function(k,pid){if(k<37||k>40)return false;var d={37:[-1,0],38:[0,-1],39:[1,0],40:[0,1]}[k];var pt=P.ptr(pid);
     var nx=Math.max(BX+S/2,Math.min(BX+7.5*S,pt.x+d[0]*S)),ny=Math.max(BY+S/2,Math.min(BY+7.5*S,pt.y+d[1]*S));if(pid==1){P.c2.x=nx;P.c2.y=ny;P.c2.shown=1}else{P.mx=nx;P.my=ny}return true};
   G.onAction=function(mx,my,pid){if(!human(pid))return;var q=sqAt(mx,my);if(q<0)return;
@@ -104,6 +105,7 @@ P.register((function(){
   G.frame=function(dt){
     if(anim){anim.k+=dt/.17;if(anim.k>=1){anim.k=0;anim.i++;if(anim.i>=anim.pts.length-1)after();else P.S.tick(.4)}}
     if(state=='ai'){aiT-=dt;if(aiT<=0){state='think';setTimeout(function(){var m=think();state='play';if(m)doMove(m)},30)}}
+    var hp0=P.ptr(!vsAI&&P.padCount()==2?turnPid():0),sig=[state,sel,opts.length,b?b.join(''):'',turn,sqAt(hp0.x,hp0.y),P.padCount(),W].join('|');if(sig==G._sig&&!anim)return;G._sig=sig;
     x.drawImage(bg,0,0,W,H);
     if(last){[last.f,last.t].forEach(function(i){x.fillStyle='rgba(95,212,196,.28)';x.fillRect(BX+(i&7)*S,BY+(i>>3)*S,S,S)})}
     var movable=human(null,1)?all.map(function(m){return m.f}):[];
