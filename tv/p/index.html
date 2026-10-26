@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="kk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#17111c">
+<title>Алаң — пульт</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#ffcf6e;--ink:#fff7ea;--bg:#17111c;--panel:#241a2b}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;overflow:hidden;touch-action:none;overscroll-behavior:none}
+body{display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 14px)}
+header{display:flex;align-items:center;padding:6px 2px 12px}
+h1{font-size:24px;font-weight:800;color:var(--gold);flex:1}
+#game{font-size:13px;font-weight:700;opacity:.6;display:block;color:var(--ink)}
+.chip{font-size:13px;font-weight:800;padding:7px 11px;border-radius:20px;background:rgba(255,255,255,.08);margin-left:6px;border:0;color:var(--ink);font-family:inherit}
+#st.ok{background:rgba(120,220,140,.16);color:#9be8ad}
+#pad{flex:1;min-height:150px;border-radius:24px;background:radial-gradient(circle at 50% 40%,#382644,#211726);position:relative;
+  display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid rgba(255,255,255,.06);overflow:hidden}
+#pad p{font-size:16px;font-weight:700;color:rgba(255,247,234,.4);line-height:1.55;pointer-events:none}
+#dot{position:absolute;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;border:3px solid var(--gold);opacity:0;pointer-events:none;transition:opacity .15s}
+.row{display:flex;margin-top:12px}
+.row button{flex:1;border:0;border-radius:18px;font-family:inherit;font-weight:800;color:var(--ink);background:var(--panel);margin-left:10px}
+.row button:first-child{margin-left:0}
+.arrows button{height:58px;font-size:24px}
+.main button{height:96px;font-size:28px}
+#ok{flex:2.2;background:var(--gold);color:#24160c}
+#menu{font-size:18px}
+button.on{transform:scale(.96);filter:brightness(1.15)}
+/* код енгізу */
+#join{position:fixed;left:0;top:0;right:0;bottom:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#join h2{font-size:30px;font-weight:800;color:var(--gold)}
+#join p{font-size:16px;opacity:.75;margin-top:10px;line-height:1.5}
+#code{display:flex;margin:26px 0 22px}
+#code span{width:56px;height:68px;margin:0 6px;border-radius:14px;background:var(--panel);font-size:36px;font-weight:800;display:flex;align-items:center;justify-content:center}
+#keys{display:flex;flex-wrap:wrap;width:270px}
+#keys button{width:80px;height:62px;margin:5px;border-radius:16px;border:0;background:var(--panel);color:var(--ink);font:800 26px Manrope,system-ui}
+#jerr{color:#ff8c6e;font-weight:700;margin-top:12px;min-height:20px}
+</style></head><body>
+<header><h1>Алаң<span id="game">пульт</span></h1><button class="chip" id="mute">🔊</button><span class="chip" id="st">Қосылуда…</span></header>
+<div id="pad"><p>Саусақпен жүргізіңіз — курсор қозғалады<br>Бір рет түртсеңіз — OK</p><div id="dot"></div></div>
+<div class="row arrows"><button data-k="37">◀</button><button data-k="38">▲</button><button data-k="40">▼</button><button data-k="39">▶</button></div>
+<div class="row main"><button id="menu">← Мәзір</button><button id="ok">OK</button></div>
+
+<div id="join"><h2>ТВ кодын енгізіңіз</h2><p>Код теледидардағы QR-кодтың астында тұр.</p>
+  <div id="code"><span></span><span></span><span></span><span></span></div>
+  <div id="keys"></div><div id="jerr"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+var code=(location.hash||'').replace('#','').replace(/\D/g,''),conn=null,peer=null,st=document.getElementById('st');
+function setSt(t,ok){st.textContent=t;st.className='chip'+(ok?' ok':'')}
+function send(o){if(conn&&conn.open)conn.send(o)}
+function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+
+/* код енгізу экраны */
+var typed='';
+function showJoin(err){document.getElementById('join').style.display='flex';document.getElementById('jerr').textContent=err||'';typed='';drawCode()}
+function drawCode(){var s=document.querySelectorAll('#code span');for(var i=0;i<4;i++)s[i].textContent=typed[i]||''}
+(function(){var k=document.getElementById('keys'),h='';[1,2,3,4,5,6,7,8,9,'⌫',0,'→'].forEach(function(v){h+='<button data-v="'+v+'">'+v+'</button>'});k.innerHTML=h;
+  k.addEventListener('click',function(e){var v=e.target.getAttribute('data-v');if(v==null)return;buzz(10);
+    if(v=='⌫')typed=typed.slice(0,-1);else if(v=='→'){if(typed.length==4)go(typed)}else if(typed.length<4){typed+=v;if(typed.length==4)setTimeout(function(){go(typed)},150)}drawCode()})})();
+function go(c){code=c;location.hash=c;document.getElementById('join').style.display='none';connect()}
+
+function connect(){
+  if(!/^\d{4}$/.test(code)){showJoin();return}
+  setSt('Қосылуда…');
+  if(!peer||peer.destroyed){peer=new Peer({debug:0});peer.on('open',dial);
+    peer.on('error',function(e){if(e&&e.type=='peer-unavailable'){setSt('ТВ табылмады');showJoin('Бұл кодпен ТВ табылмады. Кодты тексеріңіз.')}else{setSt('Қайта қосылуда…');setTimeout(connect,2500)}})}
+  else if(peer.open)dial();
+}
+function dial(){
+  conn=peer.connect('alantv-'+code,{reliable:true});
+  conn.on('open',function(){setSt('Қосылды',true);buzz(30);try{localStorage.setItem('alan_last',code)}catch(e){}});
+  conn.on('data',function(d){if(!d)return;
+    if(d.t=='v')buzz(d.p);
+    if(d.t=='g')document.getElementById('game').textContent=d.name;
+    if(d.t=='snd')document.getElementById('mute').textContent=d.on?'🔊':'🔇'});
+  conn.on('close',function(){setSt('Ажырады…');setTimeout(connect,1500)});
+}
+if(!code){try{var l=localStorage.getItem('alan_last');if(l)code=l}catch(e){}}
+connect();
+
+/* тачпад */
+var pad=document.getElementById('pad'),dot=document.getElementById('dot');
+var lx=0,ly=0,t0=0,moved=0,ax=0,ay=0,raf=0,SENS=1.7,tid=null;
+function flush(){raf=0;if(ax||ay){send({t:'m',x:ax,y:ay});ax=ay=0}}
+function accel(d){var a=Math.abs(d);return d*(1+Math.min(2.2,a/18))} // жылдам жүргізсе — алысқа барады
+pad.addEventListener('touchstart',function(e){var t=e.changedTouches[0];tid=t.identifier;lx=t.clientX;ly=t.clientY;t0=Date.now();moved=0;
+  var r=pad.getBoundingClientRect();dot.style.left=lx-r.left+'px';dot.style.top=ly-r.top+'px';dot.style.opacity=1;e.preventDefault()},{passive:false});
+pad.addEventListener('touchmove',function(e){var t=null;for(var i=0;i<e.changedTouches.length;i++)if(e.changedTouches[i].identifier===tid)t=e.changedTouches[i];if(!t)return;
+  var r=pad.getBoundingClientRect(),dx=t.clientX-lx,dy=t.clientY-ly;
+  ax+=accel(dx)/r.width*SENS;ay+=accel(dy)/r.width*SENS*1.1;moved+=Math.abs(dx)+Math.abs(dy);lx=t.clientX;ly=t.clientY;
+  dot.style.left=lx-r.left+'px';dot.style.top=ly-r.top+'px';if(!raf)raf=requestAnimationFrame(flush);e.preventDefault()},{passive:false});
+pad.addEventListener('touchend',function(e){dot.style.opacity=0;if(moved<12&&Date.now()-t0<300){send({t:'a'});buzz(15)}e.preventDefault()},{passive:false});
+
+function btn(el,fn){el.addEventListener('touchstart',function(e){el.className+=' on';fn();buzz(12);e.preventDefault()},{passive:false});
+  el.addEventListener('touchend',function(){el.className=el.className.replace(' on','')});
+  el.addEventListener('click',function(){fn()})}
+btn(document.getElementById('ok'),function(){send({t:'a'})});
+btn(document.getElementById('menu'),function(){send({t:'b'})});
+btn(document.getElementById('mute'),function(){send({t:'mute'})});
+Array.prototype.forEach.call(document.querySelectorAll('[data-k]'),function(b){btn(b,function(){send({t:'k',k:+b.getAttribute('data-k')})})});
+</script></body></html>
