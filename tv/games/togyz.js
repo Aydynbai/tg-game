@@ -40,7 +40,7 @@ P.register((function(){
   /* геометрия */
   function dims(){W=P.W;H=P.H;var bh=Math.min(H*.54,W*.86*.46),bw=bh/.46;B={x:(W-bw)/2,y:H*.53-bh/2,w:bw,h:bh};
     B.hw=bw/10.6;B.hh=bh*.33;B.gap=(bw-9*B.hw)/10;
-    bg.width=W;bg.height=H;var c=bg.getContext('2d');paintBg(c,W,H);paintBoard(c);}
+    var c=P.bake(bg);paintBg(c,W,H);paintBoard(c);}
   function holeXY(i){var col=i<9?i:17-i,top=i>=9;return {x:B.x+B.gap+col*(B.hw+B.gap)+B.hw/2,y:top?B.y+B.h*.2:B.y+B.h*.8}}
   function kazanRect(side){return {x:B.x+B.w*.08,y:side==1?B.y+B.h*.385:B.y+B.h*.515,w:B.w*.84,h:B.h*.1}}
   function rr(c,x0,y0,w,h,r){c.beginPath();c.moveTo(x0+r,y0);c.arcTo(x0+w,y0,x0+w,y0+h,r);c.arcTo(x0+w,y0+h,x0,y0+h,r);c.arcTo(x0,y0+h,x0,y0,r);c.arcTo(x0,y0,x0+w,y0,r);c.closePath()}
@@ -114,7 +114,7 @@ P.register((function(){
     if(state=='ai'){aiT-=dt;if(aiT<=0){var ms=moves(st,1);if(ms.length)startMove(1,aiMove());}}
     if(state=='anim'&&anim)stepAnim(dt);
     if(flash){flash.t-=dt;if(flash.t<=0)flash=null}
-    x.drawImage(bg,0,0);
+    x.drawImage(bg,0,0,W,H);
     var b=anim?anim.b:st.b,k=anim?anim.k:st.k,tz=anim?anim.tz:st.tz,hv=hoverHole(),prev=hv>=0?apply(st,turn,hv).last:-1;
     for(var i=0;i<18;i++){var hl=null;if(i==hv)hl='#ffcf6e';else if(i==prev)hl='rgba(255,207,110,.5)';
       if(flash&&flash.i==i)hl=flash.tz?'#9be8ad':'#ffffff';if(anim&&anim.h==i&&anim.phase=='sow')hl='rgba(255,255,255,.6)';

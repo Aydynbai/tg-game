@@ -43,17 +43,17 @@ P.register((function(){
   function evalB(bd){var v=0;for(var i=0;i<64;i++){var p=bd[i];if(p=='.')continue;var r=i>>3,c=i&7,x0=king(p)?320:100;
       if(!king(p))x0+=(p=='w'?7-r:r)*5;if(c>1&&c<6&&r>1&&r<6)x0+=6;if(side(p)=='w')v+=x0;else v-=x0}return v}
   var deadline=0,nodes=0;
-  function nega(bd,me,d,a,bt){if((++nodes&255)==0&&Date.now()>deadline)throw 't';
+  function nega(bd,me,d,a,bt){if((++nodes&63)==0&&Date.now()>deadline)throw 't';
     var ms=moves(bd,me);if(!ms.length)return -100000-d;if(d==0){var e=evalB(bd);return me=='w'?e:-e}
     ms.sort(function(p,q){return q.caps.length-p.caps.length});
     for(var i=0;i<ms.length;i++){var v=-nega(apply(bd,ms[i]),me=='w'?'b':'w',d-1,-bt,-a);if(v>a)a=v;if(a>=bt)break}return a}
-  function think(){var ms=moves(b,'b'),best=ms[0];deadline=Date.now()+1200;nodes=0;
+  function think(){var ms=moves(b,'b'),best=ms[0];deadline=Date.now()+800;nodes=0;
     try{for(var d=1;d<=8;d++){var bv=-1e9,bm=best;for(var i=0;i<ms.length;i++){var v=-nega(apply(b,ms[i]),'w',d-1,-1e9,-bv)+Math.random()*2;if(v>bv){bv=v;bm=ms[i]}}best=bm;ms.splice(ms.indexOf(best),1);ms.unshift(best)}}catch(e){}
     return best}
 
   /* сурет */
   function dims(){W=P.W;H=P.H;S=Math.floor(Math.min(H*.105,W*.065));BX=Math.round(W*.37-4*S);BY=Math.round(H*.53-4*S);
-    bg.width=W;bg.height=H;var c=bg.getContext('2d');paintBg(c,W,H);paintBoard(c,BX,BY,S)}
+    var c=P.bake(bg);paintBg(c,W,H);paintBoard(c,BX,BY,S)}
   function paintBg(c,w,h){var g=c.createRadialGradient(w*.4,h*.5,0,w*.4,h*.5,w*.8);g.addColorStop(0,'#1f2a2c');g.addColorStop(1,'#0b1011');c.fillStyle=g;c.fillRect(0,0,w,h);
     var s=h*.14,row=0;for(var y=0;y<h+s;y+=s,row++)for(var xx=(row%2)*s/2;xx<w+s;xx+=s)P.orn(c,2,xx,y,s*.5,'rgba(95,212,196,.035)',s*.03)}
   function paintBoard(c,bx,by,s){var m=s*.45;
@@ -92,6 +92,7 @@ P.register((function(){
     setTimeout(function(){P.panel({sub:'Ойын аяқталды',big:t,text:vsAI?'Компьютерді жеңген саны: '+P.best('doiby'):'',
       btns:[['Компьютерге қарсы',function(){begin(true)}],['Екі адам',function(){begin(false)}]]})},800)}
 
+  G._dbg=function(){return {turn:turn,state:state,anim:!!anim,all:all.length,sel:sel,opts:opts.length,b:b.join('')}};
   G.start=function(){x=P.ctx;dims();b=init();menu()};
   G.resize=function(){dims()};
   G.onKey=function(k,pid){if(k<37||k>40)return false;var d={37:[-1,0],38:[0,-1],39:[1,0],40:[0,1]}[k];var pt=P.ptr(pid);
@@ -103,7 +104,7 @@ P.register((function(){
   G.frame=function(dt){
     if(anim){anim.k+=dt/.17;if(anim.k>=1){anim.k=0;anim.i++;if(anim.i>=anim.pts.length-1)after();else P.S.tick(.4)}}
     if(state=='ai'){aiT-=dt;if(aiT<=0){state='think';setTimeout(function(){var m=think();state='play';if(m)doMove(m)},30)}}
-    x.drawImage(bg,0,0);
+    x.drawImage(bg,0,0,W,H);
     if(last){[last.f,last.t].forEach(function(i){x.fillStyle='rgba(95,212,196,.28)';x.fillRect(BX+(i&7)*S,BY+(i>>3)*S,S,S)})}
     var movable=human(null,1)?all.map(function(m){return m.f}):[];
     var hp=P.ptr(!vsAI&&P.padCount()==2?turnPid():0),hv=human(null,1)?sqAt(hp.x,hp.y):-1;

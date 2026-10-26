@@ -36,7 +36,7 @@ P.register((function(){
     if(kind=='saka'||kind=='saka2'){c.fillStyle='#ffcf6e';[-.6,0,.6].forEach(function(o){c.beginPath();c.arc(o*r,-r*.05,r*.11,0,7);c.fill()})}
     c.restore();
   }
-  function dims(){W=P.W;H=P.H;C={x:W/2,y:H*.42};R=H*.27;ra=H*.026;rs=H*.034;bg.width=W;bg.height=H;paintGround(bg.getContext('2d'),W,H,C.x,C.y,R)}
+  function dims(){W=P.W;H=P.H;C={x:W/2,y:H*.42};R=H*.27;ra=H*.026;rs=H*.034;paintGround(P.bake(bg),W,H,C.x,C.y,R)}
   function setup(){
     bodies=[];var sp=ra*2.75,red=Math.floor(Math.random()*N);
     for(var i=0;i<N;i++)bodies.push({x:C.x+(i-(N-1)/2)*sp,y:C.y+P.rnd(-1,1)*ra*.25,vx:0,vy:0,r:ra,m:1,rot:P.rnd(-.25,.25),w:0,kind:i==red?'red':'bone',face:null,won:false});
@@ -92,7 +92,7 @@ P.register((function(){
         else{sh[pl]--;P.S.miss();if(two&&sh[1-pl]>0){pl=1-pl;P.toast((pl+1)+'-ойыншы атады',1200)}}
         if(sh[pl]<=0){if(two&&sh[1-pl]>0){pl=1-pl;P.toast((pl+1)+'-ойыншы атады',1200)}else{hud();end();return}}
         hud();state='aim'}}
-    x.drawImage(bg,0,0);
+    x.drawImage(bg,0,0,W,H);
     if(state=='aim'||state=='power'){
       var pt=P.ptr(cpid()),a=state=='aim'?Math.atan2(pt.y-saka.y,pt.x-saka.x):ang;if(state=='aim'&&pt.y>saka.y-H*.02)a=-Math.PI/2;
       var L=H*(state=='power'?.18+.5*pow:.42);

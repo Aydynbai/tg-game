@@ -24,7 +24,7 @@ P.register((function(){
     grass.forEach(function(q){var py=gy+q[1]*(h-gy),sc=(.4+q[1])*h/720,px=q[0]*w;
       c.beginPath();c.moveTo(px,py);c.lineTo(px-3*sc,py-12*sc);c.moveTo(px+4*sc,py);c.lineTo(px+6*sc,py-15*sc);c.stroke()});
   }
-  function dims(){W=P.W;H=P.H;GY=H*.52;bg.width=W;bg.height=H;paintWorld(bg.getContext('2d'),W,H,GY)}
+  function dims(){W=P.W;H=P.H;GY=H*.52;paintWorld(P.bake(bg),W,H,GY)}
 
   var KIND={
     hare:{pts:1,spd:[.16,.26],size:.032,col:'#d9c3a3',ear:1},
@@ -131,7 +131,7 @@ P.register((function(){
       else{var ty=Math.min(pt.y,GY-H*.08);e.ex+=(pt.x-e.ex)*Math.min(1,dt*12);e.ey+=(ty-e.ey)*Math.min(1,dt*12)}
       if(e.hurt>0)e.hurt-=dt});
     x.save();if(shake>0){shake-=dt;x.translate(rnd(-1,1)*12*shake,rnd(-1,1)*12*shake)}
-    x.drawImage(bg,0,0);
+    x.drawImage(bg,0,0,W,H);
     prey.sort(function(a,b){return a.lane-b.lane});
     prey.forEach(function(p){drawPrey(x,p,p.x*W,pY(p),pS(p))});
     for(i=parts.length-1;i>=0;i--){var o=parts[i];o.t+=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.vy+=H*1.2*dt;

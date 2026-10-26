@@ -7,8 +7,7 @@ P.register((function(){
   var bg=document.createElement('canvas'),two=false,pl=0;
 
   function slotXY(s){var a=-Math.PI/2+s*Math.PI/3;return {x:cx+Math.cos(a)*RR,y:cy+Math.sin(a)*RR}}
-  function dims(){W=P.W;H=P.H;cx=W/2;cy=H*.56;RR=H*.29;TR=H*.105;bg.width=W;bg.height=H;
-    var c=bg.getContext('2d'),g=c.createRadialGradient(cx,cy,0,cx,cy,W*.7);g.addColorStop(0,'#2a1f3a');g.addColorStop(1,'#120c18');
+  function dims(){W=P.W;H=P.H;cx=W/2;cy=H*.56;RR=H*.29;TR=H*.105;var c=P.bake(bg),g=c.createRadialGradient(cx,cy,0,cx,cy,W*.7);g.addColorStop(0,'#2a1f3a');g.addColorStop(1,'#120c18');
     c.fillStyle=g;c.fillRect(0,0,W,H);
     // кереге тор өрнегі
     c.strokeStyle='rgba(255,207,110,.05)';c.lineWidth=H*.004;var s=H*.08;
@@ -67,7 +66,7 @@ P.register((function(){
     if(state=='done'){timer-=dt;if(timer<=0)next()}
     if(flashOk>0)flashOk-=dt*1.5;
     x.save();if(shake>0){shake-=dt;x.translate(P.rnd(-1,1)*14*shake,0)}
-    x.drawImage(bg,0,0);
+    x.drawImage(bg,0,0,W,H);
     var hp=P.ptr(two&&P.padCount()==2?pl:0),hov=state=='input'?hitTile(hp.x,hp.y):-1;
     for(var t=0;t<6;t++){var p=tilePos(t);drawTile(x,t,p.x,p.y,TR*(hov==t?1.06:1),lit==t,state=='show'&&lit!=t)}
     // ортадағы мәтін
