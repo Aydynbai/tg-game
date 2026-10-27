@@ -71,9 +71,9 @@ P.register((function(){
   function assist(e){var pt=P.ptr(e.i);e.ax=pt.x;e.ay=pt.y;e.lock=null;if(pt.y<GY-H*.04)return;
     var R=H*.16,bd=R;prey.forEach(function(p){var d=Math.hypot(p.x*W-pt.x,pY(p)-pS(p)*.5-pt.y);if(d<bd){bd=d;e.lock=p}});
     if(e.lock){var k=1-bd/R*.6,L=e.lock;e.ax=pt.x+(L.x*W-pt.x)*k;e.ay=pt.y+(pY(L)-pS(L)*.5-pt.y)*k}}
-  function drawAim(e){var r=H*.045,ok=e.ay>GY-H*.04,ax=e.ax,ay=e.ay,col=e.i?'#5fd4c4':'#ffcf6e';
+  function drawAim(e){var r=H*.075,ok=e.ay>GY-H*.04,ax=e.ax,ay=e.ay,col=e.i?'#5fd4c4':'#ffcf6e';
     if(e.lock){x.fillStyle=e.i?'rgba(95,212,196,.18)':'rgba(255,207,110,.18)';x.beginPath();x.arc(ax,ay,r*1.25,0,7);x.fill()}
-    x.strokeStyle=e.lock?col:ok?(e.i?'rgba(170,240,230,.95)':'rgba(255,230,180,.95)'):'rgba(255,255,255,.35)';x.lineWidth=3;
+    x.strokeStyle=e.lock?col:ok?(e.i?'rgba(170,240,230,.95)':'rgba(255,230,180,.95)'):'rgba(255,255,255,.5)';x.lineWidth=H*.009;
     x.beginPath();x.arc(ax,ay,r,0,7);x.stroke();
     x.beginPath();x.moveTo(ax-r*1.4,ay);x.lineTo(ax-r*.6,ay);x.moveTo(ax+r*.6,ay);x.lineTo(ax+r*1.4,ay);
     x.moveTo(ax,ay-r*1.4);x.lineTo(ax,ay-r*.6);x.moveTo(ax,ay+r*.6);x.lineTo(ax,ay+r*1.4);x.stroke();
